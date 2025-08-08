@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Burnaby Arms - Darts Scorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .hidden { display: none !important; }
+        #toast-notification {
+            transition: transform 0.5s ease-in-out;
+        }
+        .modal-overlay {
+            transition: opacity 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div class="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
+
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-900">The Burnaby Arms Darts</h1>
+            <p class="text-lg text-gray-600 mt-1">League Match Scorer</p>
+        </header>
+
+        <!-- Connection Status -->
+        <div id="connection-status" class="text-center p-4 mb-4 bg-yellow-100 text-yellow-800 rounded-xl hidden">Connecting to database...</div>
+
+
+        <!-- Tabs Navigation -->
+        <div class="mb-6">
+            <div class="border-b border-gray-200">
+                <nav class="-mb-px flex space-x-6 overflow-x-auto" aria-label="Tabs">
+                    <button id="tab-btn-match" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200">Current Match</button>
+                    <button id="tab-btn-live" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200">Scoring Panel</button>
+                    <button id="tab-btn-previous" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200">Previous Matches</button>
+                    <button id="tab-btn-fines" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200">Fines</button>
+                    <button id="tab-btn-stats" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200">League Stats</button>
+                    <button id="tab-btn-setup" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200">Match Setup</button>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Current Match Tab -->
+        <div id="tab-content-match">
+             <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                 <div class="p-6">
+                     <h2 class="text-2xl font-bold text-gray-900">Current Match Results</h2>
+                     <p id="current-match-opponent" class="mt-1 text-sm text-gray-600">Live results as they come in.</p>
+                 </div>
+                 <div id="current-match-results" class="p-6 space-y-4"></div>
+             </div>
+        </div>
+        
+        <!-- Previous Matches Tab -->
+        <div id="tab-content-previous" class="hidden">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="md:col-span-1">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                        <h2 class="text-xl font-semibold mb-4">Match History</h2>
+                        <div id="previous-matches-list" class="space-y-2"></div>
+                    </div>
+                </div>
+                <div class="md:col-span-2">
+                    <div id="previous-match-details" class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                        <p class="text-gray-500">Select a match to see the details.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fines Tab -->
+        <div id="tab-content-fines" class="hidden">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="p-6">
+                    <h2 class="text-2xl font-bold text-gray-900">Outstanding Fines</h2>
+                    <p class="mt-1 text-sm text-gray-600">Track and clear player fines.</p>
+                </div>
+                <div id="fines-list" class="divide-y divide-gray-200"></div>
+            </div>
+        </div>
+
+        <!-- Match Setup Tab -->
+        <div id="tab-content-setup" class="hidden">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="md:col-span-1">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                        <h2 class="text-xl font-semibold mb-4">Player Roster</h2>
+                        <div id="player-roster-list" class="space-y-3 mb-4"></div>
+                        <div class="space-y-2">
+                            <input type="text" id="new-player-name-input" placeholder="Enter new player name" class="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-emerald-500 focus:border-emerald-500">
+                            <button id="add-player-btn" class="w-full bg-gray-800 text-white py-2 px-4 rounded-xl hover:bg-gray-700 transition-colors duration-200">Add Player</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="md:col-span-2">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                        <h2 class="text-xl font-semibold mb-4">Setup New Match</h2>
+                        <div class="mb-4">
+                             <label for="opposition-name" class="block text-sm font-medium text-gray-700">Opposition Name</label>
+                             <input type="text" id="opposition-name-input" placeholder="e.g., The King's Arms" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-emerald-500 focus:border-emerald-500">
+                        </div>
+                        <div id="fixture-setup-form" class="space-y-4"></div>
+                        <div class="mt-6">
+                            <button id="create-fixture-btn" class="w-full bg-emerald-600 text-white py-3 px-4 rounded-xl hover:bg-emerald-700 transition-colors duration-200 font-semibold text-lg">Create & Start Fixture</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Scoring Tab -->
+        <div id="tab-content-live" class="hidden">
+            <div id="live-match-content" class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                <div class="flex justify-between items-center mb-4 pb-4 border-b border-gray-200">
+                    <button id="prev-game-btn" class="bg-gray-800 text-white py-2 px-5 rounded-xl hover:bg-gray-700 disabled:opacity-50 transition-colors duration-200">Previous</button>
+                    <h2 id="game-nav-title" class="text-2xl font-bold text-center"></h2>
+                    <button id="next-game-btn" class="bg-gray-800 text-white py-2 px-5 rounded-xl hover:bg-gray-700 disabled:opacity-50 transition-colors duration-200">Next</button>
+                </div>
+                <div>
+                    <h3 id="current-player-names" class="text-3xl font-bold text-center text-emerald-600 mb-6"></h3>
+                    
+                    <!-- Shared Stats -->
+                    <div class="grid grid-cols-2 sm:grid-cols-2 gap-4 mb-6 text-center">
+                        <div class="bg-gray-100 p-4 rounded-2xl">
+                            <label class="text-sm font-medium text-gray-600">Legs Won</label>
+                            <div class="flex items-center justify-center space-x-3 mt-2">
+                                <button data-stat="legsWon" data-op="-1" class="stat-btn w-8 h-8 rounded-full bg-gray-300 text-gray-700 text-lg font-bold">-</button>
+                                <span id="stat-legsWon" class="text-3xl font-bold">0</span>
+                                <button data-stat="legsWon" data-op="1" class="stat-btn w-8 h-8 rounded-full bg-gray-300 text-gray-700 text-lg font-bold">+</button>
+                            </div>
+                        </div>
+                         <div class="bg-gray-100 p-4 rounded-2xl">
+                            <label class="text-sm font-medium text-gray-600">Legs Lost</label>
+                            <div class="flex items-center justify-center space-x-3 mt-2">
+                                <button data-stat="legsLost" data-op="-1" class="stat-btn w-8 h-8 rounded-full bg-gray-300 text-gray-700 text-lg font-bold">-</button>
+                                <span id="stat-legsLost" class="text-3xl font-bold">0</span>
+                                <button data-stat="legsLost" data-op="1" class="stat-btn w-8 h-8 rounded-full bg-gray-300 text-gray-700 text-lg font-bold">+</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Singles Scoring -->
+                    <div id="singles-scoring-panel" class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6 text-center">
+                        <div class="bg-gray-100 p-4 rounded-2xl">
+                            <label class="text-sm font-medium text-gray-600">100+</label>
+                            <div class="flex items-center justify-center space-x-3 mt-2">
+                                <button data-stat="scores100" data-op="-1" class="stat-btn w-8 h-8 rounded-full bg-gray-300 text-gray-700 text-lg font-bold">-</button>
+                                <span id="stat-scores100" class="text-3xl font-bold">0</span>
+                                <button data-stat="scores100" data-op="1" class="stat-btn w-8 h-8 rounded-full bg-gray-300 text-gray-700 text-lg font-bold">+</button>
+                            </div>
+                        </div>
+                        <div class="bg-gray-100 p-4 rounded-2xl">
+                            <label class="text-sm font-medium text-gray-600">140+</label>
+                            <div class="flex items-center justify-center space-x-3 mt-2">
+                                <button data-stat="scores140" data-op="-1" class="stat-btn w-8 h-8 rounded-full bg-gray-300 text-gray-700 text-lg font-bold">-</button>
+                                <span id="stat-scores140" class="text-3xl font-bold">0</span>
+                                <button data-stat="scores140" data-op="1" class="stat-btn w-8 h-8 rounded-full bg-gray-300 text-gray-700 text-lg font-bold">+</button>
+                            </div>
+                        </div>
+                        <div class="bg-gray-100 p-4 rounded-2xl">
+                            <label class="text-sm font-medium text-gray-600">180s</label>
+                            <div class="flex items-center justify-center space-x-3 mt-2">
+                                <button data-stat="scores180" data-op="-1" class="stat-btn w-8 h-8 rounded-full bg-gray-300 text-gray-700 text-lg font-bold">-</button>
+                                <span id="stat-scores180" class="text-3xl font-bold">0</span>
+                                <button data-stat="scores180" data-op="1" class="stat-btn w-8 h-8 rounded-full bg-gray-300 text-gray-700 text-lg font-bold">+</button>
+                            </div>
+                        </div>
+                        <div class="bg-gray-100 p-4 rounded-2xl">
+                            <label class="text-sm font-medium text-gray-600">?</label>
+                            <div class="flex items-center justify-center space-x-3 mt-2">
+                                <button data-stat="sillyThings" data-op="-1" class="stat-btn w-8 h-8 rounded-full bg-gray-300 text-gray-700 text-lg font-bold">-</button>
+                                <span id="stat-sillyThings" class="text-3xl font-bold">0</span>
+                                <button data-stat="sillyThings" data-op="1" class="stat-btn w-8 h-8 rounded-full bg-gray-300 text-gray-700 text-lg font-bold">+</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Doubles Scoring -->
+                    <div id="doubles-scoring-panel" class="hidden mb-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Player 1 -->
+                            <div class="border border-gray-200 p-4 rounded-2xl">
+                                <h4 id="doubles-p1-name" class="text-lg font-semibold text-center mb-3"></h4>
+                                <div class="grid grid-cols-4 gap-2 text-center">
+                                    <div class="bg-gray-100 p-2 rounded-xl">
+                                        <label class="text-xs font-medium text-gray-600">100+</label>
+                                        <div class="flex items-center justify-center space-x-2 mt-1">
+                                            <button data-stat="scores100" data-op="-1" data-player-index="0" class="stat-btn w-7 h-7 rounded-full bg-gray-300 text-gray-700 font-bold">-</button>
+                                            <span id="stat-p1-scores100" class="text-2xl font-bold">0</span>
+                                            <button data-stat="scores100" data-op="1" data-player-index="0" class="stat-btn w-7 h-7 rounded-full bg-gray-300 text-gray-700 font-bold">+</button>
+                                        </div>
+                                    </div>
+                                    <div class="bg-gray-100 p-2 rounded-xl">
+                                        <label class="text-xs font-medium text-gray-600">140+</label>
+                                        <div class="flex items-center justify-center space-x-2 mt-1">
+                                            <button data-stat="scores140" data-op="-1" data-player-index="0" class="stat-btn w-7 h-7 rounded-full bg-gray-300 text-gray-700 font-bold">-</button>
+                                            <span id="stat-p1-scores140" class="text-2xl font-bold">0</span>
+                                            <button data-stat="scores140" data-op="1" data-player-index="0" class="stat-btn w-7 h-7 rounded-full bg-gray-300 text-gray-700 font-bold">+</button>
+                                        </div>
+                                    </div>
+                                    <div class="bg-gray-100 p-2 rounded-xl">
+                                        <label class="text-xs font-medium text-gray-600">180s</label>
+                                        <div class="flex items-center justify-center space-x-2 mt-1">
+                                            <button data-stat="scores180" data-op="-1" data-player-index="0" class="stat-btn w-7 h-7 rounded-full bg-gray-300 text-gray-700 font-bold">-</button>
+                                            <span id="stat-p1-scores180" class="text-2xl font-bold">0</span>
+                                            <button data-stat="scores180" data-op="1" data-player-index="0" class="stat-btn w-7 h-7 rounded-full bg-gray-300 text-gray-700 font-bold">+</button>
+                                        </div>
+                                    </div>
+                                    <div class="bg-gray-100 p-2 rounded-xl">
+                                        <label class="text-xs font-medium text-gray-600">?</label>
+                                        <div class="flex items-center justify-center space-x-2 mt-1">
+                                            <button data-stat="sillyThings" data-op="-1" data-player-index="0" class="stat-btn w-7 h-7 rounded-full bg-gray-300 text-gray-700 font-bold">-</button>
+                                            <span id="stat-p1-sillyThings" class="text-2xl font-bold">0</span>
+                                            <button data-stat="sillyThings" data-op="1" data-player-index="0" class="stat-btn w-7 h-7 rounded-full bg-gray-300 text-gray-700 font-bold">+</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Player 2 -->
+                            <div class="border border-gray-200 p-4 rounded-2xl">
+                                <h4 id="doubles-p2-name" class="text-lg font-semibold text-center mb-3"></h4>
+                                <div class="grid grid-cols-4 gap-2 text-center">
+                                    <div class="bg-gray-100 p-2 rounded-xl">
+                                        <label class="text-xs font-medium text-gray-600">100+</label>
+                                        <div class="flex items-center justify-center space-x-2 mt-1">
+                                            <button data-stat="scores100" data-op="-1" data-player-index="1" class="stat-btn w-7 h-7 rounded-full bg-gray-300 text-gray-700 font-bold">-</button>
+                                            <span id="stat-p2-scores100" class="text-2xl font-bold">0</span>
+                                            <button data-stat="scores100" data-op="1" data-player-index="1" class="stat-btn w-7 h-7 rounded-full bg-gray-300 text-gray-700 font-bold">+</button>
+                                        </div>
+                                    </div>
+                                    <div class="bg-gray-100 p-2 rounded-xl">
+                                        <label class="text-xs font-medium text-gray-600">140+</label>
+                                        <div class="flex items-center justify-center space-x-2 mt-1">
+                                            <button data-stat="scores140" data-op="-1" data-player-index="1" class="stat-btn w-7 h-7 rounded-full bg-gray-300 text-gray-700 font-bold">-</button>
+                                            <span id="stat-p2-scores140" class="text-2xl font-bold">0</span>
+                                            <button data-stat="scores140" data-op="1" data-player-index="1" class="stat-btn w-7 h-7 rounded-full bg-gray-300 text-gray-700 font-bold">+</button>
+                                        </div>
+                                    </div>
+                                    <div class="bg-gray-100 p-2 rounded-xl">
+                                        <label class="text-xs font-medium text-gray-600">180s</label>
+                                        <div class="flex items-center justify-center space-x-2 mt-1">
+                                            <button data-stat="scores180" data-op="-1" data-player-index="1" class="stat-btn w-7 h-7 rounded-full bg-gray-300 text-gray-700 font-bold">-</button>
+                                            <span id="stat-p2-scores180" class="text-2xl font-bold">0</span>
+                                            <button data-stat="scores180" data-op="1" data-player-index="1" class="stat-btn w-7 h-7 rounded-full bg-gray-300 text-gray-700 font-bold">+</button>
+                                        </div>
+                                    </div>
+                                    <div class="bg-gray-100 p-2 rounded-xl">
+                                        <label class="text-xs font-medium text-gray-600">?</label>
+                                        <div class="flex items-center justify-center space-x-2 mt-1">
+                                            <button data-stat="sillyThings" data-op="-1" data-player-index="1" class="stat-btn w-7 h-7 rounded-full bg-gray-300 text-gray-700 font-bold">-</button>
+                                            <span id="stat-p2-sillyThings" class="text-2xl font-bold">0</span>
+                                            <button data-stat="sillyThings" data-op="1" data-player-index="1" class="stat-btn w-7 h-7 rounded-full bg-gray-300 text-gray-700 font-bold">+</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-6 max-w-xs mx-auto">
+                        <label for="high-checkout-input" class="block text-sm font-medium text-gray-700 text-center">High Checkout (H/C)</label>
+                        <input type="number" id="high-checkout-input" class="mt-1 block w-full text-center text-xl p-2 border border-gray-300 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm rounded-xl">
+                    </div>
+                    <div class="mb-8 border-t pt-6">
+                        <h4 class="text-lg font-semibold text-center mb-3">Game Incidents</h4>
+                        <div class="flex justify-center flex-wrap gap-3">
+                            <button id="fine-btn-26" class="bg-red-500 text-white py-2 px-4 rounded-xl hover:bg-red-600 transition-colors duration-200">26 (26p)</button>
+                            <button id="fine-btn-miss" class="bg-red-500 text-white py-2 px-4 rounded-xl hover:bg-red-600 transition-colors duration-200">Miss Board (50p)</button>
+                            <button id="fine-btn-low-score" class="bg-red-500 text-white py-2 px-4 rounded-xl hover:bg-red-600 transition-colors duration-200">Score &lt; 10</button>
+                        </div>
+                        <p class="text-center text-gray-600 mt-4">Current Fines: <span id="stat-fines" class="font-bold">£0.00</span></p>
+                    </div>
+                    <div id="game-action-buttons" class="mt-6 border-t border-gray-200 pt-6">
+                        <button id="save-next-game-btn" class="w-full bg-gray-800 text-white py-3 px-4 rounded-xl hover:bg-gray-700 transition-colors duration-200 font-semibold text-lg hidden">Save & Next Game</button>
+                        <button id="finish-match-btn" class="w-full bg-emerald-600 text-white py-3 px-4 rounded-xl hover:bg-emerald-700 transition-colors duration-200 font-semibold text-lg hidden">Finish Game & Save Stats</button>
+                    </div>
+                </div>
+            </div>
+            <div id="no-fixture-message" class="hidden text-center text-gray-500 bg-white p-10 rounded-2xl shadow-sm border border-gray-200">
+                <p>No active fixture. Please go to Match Setup to start a new one.</p>
+            </div>
+        </div>
+
+        <!-- League Stats Tab -->
+        <div id="tab-content-stats" class="hidden">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4">
+                    <h2 class="text-xl font-semibold">Season Leaderboard</h2>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Player</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">W</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">L</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">100+</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">140+</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">180s</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">H/C</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Fines (£)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboard-body" class="bg-white divide-y divide-gray-200"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="low-score-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden items-center justify-center z-50 modal-overlay">
+        <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm">
+            <h3 class="text-xl font-semibold mb-4">Enter Score (<10)</h3>
+            <input type="number" id="low-score-input" min="1" max="9" class="w-full px-3 py-2 border border-gray-300 rounded-xl text-center text-lg" placeholder="1-9">
+            <div class="flex justify-end space-x-3 mt-4">
+                <button id="low-score-cancel" class="bg-gray-200 text-gray-800 py-2 px-4 rounded-xl">Cancel</button>
+                <button id="low-score-submit" class="bg-emerald-600 text-white py-2 px-4 rounded-xl">Add Fine</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="dotd-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden items-center justify-center z-50 modal-overlay">
+        <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md">
+            <h3 class="text-2xl font-bold text-center mb-4">Vote for DOTD</h3>
+            <p class="text-center text-gray-600 mb-6">The player with the most votes receives a £2.50 fine.</p>
+            <div id="dotd-vote-list" class="space-y-3 mb-6"></div>
+            <button id="dotd-finish-btn" class="w-full bg-emerald-600 text-white py-3 px-4 rounded-xl font-semibold">Confirm Winner & Finish Match</button>
+        </div>
+    </div>
+
+    <div id="confirm-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden items-center justify-center z-50 modal-overlay">
+        <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm">
+            <h3 id="confirm-modal-title" class="text-xl font-semibold mb-2">Are you sure?</h3>
+            <p id="confirm-modal-text" class="text-gray-600 mb-4">This action cannot be undone.</p>
+            <div class="flex justify-end space-x-3 mt-4">
+                <button id="confirm-modal-cancel" class="bg-gray-200 text-gray-800 py-2 px-4 rounded-xl">Cancel</button>
+                <button id="confirm-modal-confirm" class="bg-red-600 text-white py-2 px-4 rounded-xl">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast-notification" class="fixed top-5 right-5 bg-emerald-500 text-white py-3 px-5 rounded-xl shadow-lg transform translate-x-[150%]" role="alert">
+        <span id="toast-message"></span>
+    </div>
+
+    <script type="module">
+        // --- Firebase SDK Imports ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, addDoc, doc, deleteDoc, runTransaction, query, updateDoc, serverTimestamp, increment, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- APPLICATION STATE ---
+        const state = {
+            db: null,
+            auth: null,
+            userId: null,
+            activeTab: 'match',
+            players: [],
+            fixture: { id: null, games: [] },
+            previousFixtures: [],
+            selectedPreviousFixtureId: null,
+            activeFixtureUnsubscribe: null,
+            currentGameIndex: 0,
+            currentGameStats: { legsWon: 0, legsLost: 0, highCheckout: 0, fines: 0, playerScores: [{ scores100: 0, scores140: 0, scores180: 0, sillyThings: 0 }, { scores100: 0, scores140: 0, scores180: 0, sillyThings: 0 }] },
+            confirmation: { action: null, data: null },
+        };
+
+        // --- DOM ELEMENTS ---
+        const ui = {
+            tabs: { match: document.getElementById('tab-btn-match'), live: document.getElementById('tab-btn-live'), previous: document.getElementById('tab-btn-previous'), fines: document.getElementById('tab-btn-fines'), stats: document.getElementById('tab-btn-stats'), setup: document.getElementById('tab-btn-setup') },
+            content: { match: document.getElementById('tab-content-match'), live: document.getElementById('tab-content-live'), previous: document.getElementById('tab-content-previous'), fines: document.getElementById('tab-content-fines'), stats: document.getElementById('tab-content-stats'), setup: document.getElementById('tab-content-setup') },
+            toast: { element: document.getElementById('toast-notification'), message: document.getElementById('toast-message') },
+            connectionStatus: document.getElementById('connection-status'),
+            playerRoster: document.getElementById('player-roster-list'),
+            newPlayerInput: document.getElementById('new-player-name-input'),
+            addPlayerBtn: document.getElementById('add-player-btn'),
+            oppositionNameInput: document.getElementById('opposition-name-input'),
+            fixtureForm: document.getElementById('fixture-setup-form'),
+            createFixtureBtn: document.getElementById('create-fixture-btn'),
+            liveMatchContent: document.getElementById('live-match-content'),
+            noFixtureMessage: document.getElementById('no-fixture-message'),
+            gameNavTitle: document.getElementById('game-nav-title'),
+            prevGameBtn: document.getElementById('prev-game-btn'),
+            nextGameBtn: document.getElementById('next-game-btn'),
+            currentPlayerNames: document.getElementById('current-player-names'),
+            statValueSpans: { 
+                legsWon: document.getElementById('stat-legsWon'), 
+                legsLost: document.getElementById('stat-legsLost'),
+                fines: document.getElementById('stat-fines'),
+                scores100: document.getElementById('stat-scores100'), 
+                scores140: document.getElementById('stat-scores140'), 
+                scores180: document.getElementById('stat-scores180'),
+                sillyThings: document.getElementById('stat-sillyThings'),
+                p1_scores100: document.getElementById('stat-p1-scores100'),
+                p1_scores140: document.getElementById('stat-p1-scores140'),
+                p1_scores180: document.getElementById('stat-p1-scores180'),
+                p1_sillyThings: document.getElementById('stat-p1-sillyThings'),
+                p2_scores100: document.getElementById('stat-p2-scores100'),
+                p2_scores140: document.getElementById('stat-p2-scores140'),
+                p2_scores180: document.getElementById('stat-p2-scores180'),
+                p2_sillyThings: document.getElementById('stat-p2-sillyThings'),
+            },
+            doublesPlayerNames: { p1: document.getElementById('doubles-p1-name'), p2: document.getElementById('doubles-p2-name') },
+            highCheckoutInput: document.getElementById('high-checkout-input'),
+            fineBtn26: document.getElementById('fine-btn-26'),
+            fineBtnMiss: document.getElementById('fine-btn-miss'),
+            fineBtnLowScore: document.getElementById('fine-btn-low-score'),
+            gameActionButtons: document.getElementById('game-action-buttons'),
+            leaderboardBody: document.getElementById('leaderboard-body'),
+            currentMatchResults: document.getElementById('current-match-results'),
+            currentMatchOpponent: document.getElementById('current-match-opponent'),
+            previousMatchesList: document.getElementById('previous-matches-list'),
+            previousMatchDetails: document.getElementById('previous-match-details'),
+            finesList: document.getElementById('fines-list'),
+            singlesScoringPanel: document.getElementById('singles-scoring-panel'),
+            doublesScoringPanel: document.getElementById('doubles-scoring-panel'),
+            lowScoreModal: { overlay: document.getElementById('low-score-modal'), input: document.getElementById('low-score-input'), cancel: document.getElementById('low-score-cancel'), submit: document.getElementById('low-score-submit') },
+            dotdModal: { overlay: document.getElementById('dotd-modal'), list: document.getElementById('dotd-vote-list'), finish: document.getElementById('dotd-finish-btn') },
+            confirmModal: { overlay: document.getElementById('confirm-modal'), title: document.getElementById('confirm-modal-title'), text: document.getElementById('confirm-modal-text'), cancel: document.getElementById('confirm-modal-cancel'), confirm: document.getElementById('confirm-modal-confirm') },
+        };
+
+        // --- RENDER FUNCTIONS ---
+        function render() {
+            renderTabs();
+            renderPlayerRoster();
+            renderFixtureSetup();
+            renderLiveMatch();
+            renderLeaderboard();
+            renderCurrentMatch();
+            renderPreviousMatches();
+            renderFines();
+        }
+
+        function renderTabs() {
+            for (const tabKey in ui.tabs) {
+                const tabButton = ui.tabs[tabKey];
+                const contentPanel = ui.content[tabKey];
+                if (tabKey === state.activeTab) {
+                    tabButton.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+                    tabButton.classList.add('border-emerald-500', 'text-emerald-600');
+                    if (contentPanel) contentPanel.classList.remove('hidden');
+                } else {
+                    tabButton.classList.remove('border-emerald-500', 'text-emerald-600');
+                    tabButton.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+                    if (contentPanel) contentPanel.classList.add('hidden');
+                }
+            }
+        }
+
+        function renderPlayerRoster() {
+            ui.playerRoster.innerHTML = '';
+            if (state.players.length === 0) {
+                ui.playerRoster.innerHTML = `<p class="text-gray-500">No players added yet.</p>`;
+                return;
+            }
+            state.players.forEach(player => {
+                const playerEl = document.createElement('div');
+                playerEl.className = 'flex items-center justify-between bg-gray-100 p-2 rounded-lg';
+                playerEl.innerHTML = `
+                    <span class="font-medium">${player.name}</span>
+                    <button data-player-id="${player.id}" class="delete-player-btn text-red-500 hover:text-red-700 text-sm font-semibold">Remove</button>
+                `;
+                ui.playerRoster.appendChild(playerEl);
+            });
+        }
+
+        function renderFixtureSetup() {
+            // Corrected game format: 5 singles, 2 doubles
+            const gameTitles = ["Singles 1", "Singles 2", "Singles 3", "Singles 4", "Singles 5", "Doubles 1", "Doubles 2"];
+            ui.fixtureForm.innerHTML = '';
+            gameTitles.forEach((title, index) => {
+                const isDoubles = title.includes("Doubles");
+                let options = state.players.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+                
+                const gameSetupEl = document.createElement('div');
+                gameSetupEl.className = 'p-4 border border-gray-200 rounded-xl';
+                gameSetupEl.innerHTML = `
+                    <h4 class="font-semibold mb-2">${title}</h4>
+                    <div class="grid grid-cols-1 ${isDoubles ? 'md:grid-cols-2' : ''} gap-4">
+                        <select id="game-${index}-p1" class="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-emerald-500 focus:border-emerald-500">
+                            <option value="">Select Player 1</option>
+                            ${options}
+                        </select>
+                        ${isDoubles ? `
+                        <select id="game-${index}-p2" class="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-emerald-500 focus:border-emerald-500">
+                            <option value="">Select Player 2</option>
+                            ${options}
+                        </select>
+                        ` : ''}
+                    </div>
+                `;
+                ui.fixtureForm.appendChild(gameSetupEl);
+            });
+        }
+        
+        function renderLeaderboard() {
+            ui.leaderboardBody.innerHTML = '';
+            // Sort players by legs won (descending) for the leaderboard
+            const sortedPlayers = [...state.players].sort((a,b) => (b.legsWon || 0) - (a.legsWon || 0));
+
+            sortedPlayers.forEach(player => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${player.name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${player.legsWon || 0}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${player.legsLost || 0}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${player.scores100 || 0}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${player.scores140 || 0}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${player.scores180 || 0}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${player.highCheckout || 0}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">£${((player.fines || 0) / 100).toFixed(2)}</td>
+                `;
+                ui.leaderboardBody.appendChild(tr);
+            });
+        }
+
+        function renderCurrentMatch() {
+            if (!state.fixture.id) {
+                ui.currentMatchResults.innerHTML = '<p class="text-gray-500">No active match.</p>';
+                ui.currentMatchOpponent.textContent = 'Live results as they come in.';
+                return;
+            }
+            ui.currentMatchOpponent.textContent = `vs ${state.fixture.oppositionName}`;
+            ui.currentMatchResults.innerHTML = '';
+
+            let burnabyScore = 0;
+            let oppositionScore = 0;
+
+            state.fixture.games.forEach((game, index) => {
+                const isCurrentGame = index === state.currentGameIndex;
+                const legsWon = isCurrentGame ? state.currentGameStats.legsWon : game.legsWon;
+                const legsLost = isCurrentGame ? state.currentGameStats.legsLost : game.legsLost;
+
+                burnabyScore += legsWon;
+                oppositionScore += legsLost;
+
+                const gameEl = document.createElement('div');
+                gameEl.className = `p-4 rounded-xl ${isCurrentGame ? 'bg-emerald-50' : 'bg-gray-50'}`;
+                const playerNames = game.playerIds.map(id => state.players.find(p => p.id === id)?.name || 'Unknown').join(' & ');
+                gameEl.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="font-bold">${game.title}</p>
+                            <p class="text-sm text-gray-600">${playerNames}</p>
+                        </div>
+                        <p class="text-xl font-bold">${legsWon} - ${legsLost}</p>
+                    </div>
+                `;
+                ui.currentMatchResults.appendChild(gameEl);
+            });
+
+             const scoreEl = document.createElement('div');
+             scoreEl.className = 'p-4 bg-emerald-600 text-white rounded-xl mt-4';
+             scoreEl.innerHTML = `<h3 class="text-2xl font-bold text-center">Overall Score: ${burnabyScore} - ${oppositionScore}</h3>`;
+             ui.currentMatchResults.appendChild(scoreEl);
+        }
+
+        function renderPreviousMatches() {
+            ui.previousMatchesList.innerHTML = '';
+            if (state.previousFixtures.length === 0) {
+                ui.previousMatchesList.innerHTML = '<p class="text-gray-500">No finished matches.</p>';
+                return;
+            }
+            state.previousFixtures.forEach(fixture => {
+                const item = document.createElement('button');
+                item.className = `w-full text-left p-3 rounded-lg transition-colors duration-200 ${state.selectedPreviousFixtureId === fixture.id ? 'bg-emerald-100' : 'hover:bg-gray-100'}`;
+                item.dataset.fixtureId = fixture.id;
+                const dateStr = fixture.createdAt?.toDate ? fixture.createdAt.toDate().toLocaleDateString() : 'Date unknown';
+                item.innerHTML = `
+                    <p class="font-semibold">vs ${fixture.oppositionName}</p>
+                    <p class="text-sm text-gray-500">${dateStr}</p>
+                `;
+                ui.previousMatchesList.appendChild(item);
+            });
+
+            const selectedFixture = state.previousFixtures.find(f => f.id === state.selectedPreviousFixtureId);
+            if (selectedFixture) {
+                ui.previousMatchDetails.innerHTML = '';
+                 let burnabyScore = 0;
+                 let oppositionScore = 0;
+                 selectedFixture.games.forEach(game => {
+                     burnabyScore += game.legsWon;
+                     oppositionScore += game.legsLost;
+                 });
+                ui.previousMatchDetails.innerHTML += `<h3 class="text-xl font-bold mb-4">vs ${selectedFixture.oppositionName} (${burnabyScore}-${oppositionScore})</h3>`;
+                selectedFixture.games.forEach(game => {
+                    const playerNames = game.playerIds.map(id => state.players.find(p => p.id === id)?.name || 'Unknown').join(' & ');
+                    ui.previousMatchDetails.innerHTML += `
+                        <div class="p-3 bg-gray-50 rounded-lg mb-2">
+                            <div class="flex justify-between items-center">
+                                <div><p class="font-semibold">${game.title}</p><p class="text-sm text-gray-500">${playerNames}</p></div>
+                                <p class="font-bold">${game.legsWon} - ${game.legsLost}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                ui.previousMatchDetails.innerHTML = '<p class="text-gray-500">Select a match to see the details.</p>';
+            }
+        }
+        
+        function renderFines() {
+            ui.finesList.innerHTML = '';
+            let totalFines = 0;
+            state.players.forEach(player => {
+                if (player.fines && player.fines > 0) {
+                    totalFines += player.fines;
+                    const fineEl = document.createElement('div');
+                    fineEl.className = 'p-4 flex items-center justify-between';
+                    fineEl.innerHTML = `
+                        <div>
+                            <p class="font-semibold">${player.name}</p>
+                            <p class="text-lg font-bold text-red-600">£${(player.fines / 100).toFixed(2)}</p>
+                        </div>
+                        <button data-player-id="${player.id}" class="pay-fines-btn bg-emerald-600 text-white py-2 px-4 rounded-xl hover:bg-emerald-700">Mark as Paid</button>
+                    `;
+                    ui.finesList.appendChild(fineEl);
+                }
+            });
+
+            if (totalFines === 0) {
+                ui.finesList.innerHTML = '<p class="p-4 text-gray-500">No outstanding fines. Good lads.</p>';
+            }
+        }
+
+        function renderLiveMatch() {
+            if (!state.fixture.id || !state.fixture.games || state.fixture.games.length === 0) {
+                ui.liveMatchContent.classList.add('hidden');
+                ui.noFixtureMessage.classList.remove('hidden');
+                return;
+            }
+            ui.liveMatchContent.classList.remove('hidden');
+            ui.noFixtureMessage.classList.add('hidden');
+
+            const game = state.fixture.games[state.currentGameIndex];
+            if (!game) {
+                console.error("Could not find game data for the current index.");
+                return;
+            }
+
+            const isDoubles = game.playerIds.length > 1;
+            ui.singlesScoringPanel.classList.toggle('hidden', isDoubles);
+            ui.doublesScoringPanel.classList.toggle('hidden', !isDoubles);
+            
+            const playerNames = game.playerIds.map(id => state.players.find(p => p.id === id)?.name || 'Unknown');
+            ui.currentPlayerNames.textContent = playerNames.join(' & ');
+            ui.gameNavTitle.textContent = game.title;
+
+            if(isDoubles) {
+                ui.doublesPlayerNames.p1.textContent = playerNames[0];
+                ui.doublesPlayerNames.p2.textContent = playerNames[1];
+            }
+
+            ui.statValueSpans.legsWon.textContent = state.currentGameStats.legsWon;
+            ui.statValueSpans.legsLost.textContent = state.currentGameStats.legsLost;
+            ui.statValueSpans.fines.textContent = `£${(state.currentGameStats.fines / 100).toFixed(2)}`;
+            ui.highCheckoutInput.value = state.currentGameStats.highCheckout || '';
+
+            if (isDoubles) {
+                ui.statValueSpans.p1_scores100.textContent = state.currentGameStats.playerScores[0].scores100;
+                ui.statValueSpans.p1_scores140.textContent = state.currentGameStats.playerScores[0].scores140;
+                ui.statValueSpans.p1_scores180.textContent = state.currentGameStats.playerScores[0].scores180;
+                ui.statValueSpans.p1_sillyThings.textContent = state.currentGameStats.playerScores[0].sillyThings;
+                ui.statValueSpans.p2_scores100.textContent = state.currentGameStats.playerScores[1].scores100;
+                ui.statValueSpans.p2_scores140.textContent = state.currentGameStats.playerScores[1].scores140;
+                ui.statValueSpans.p2_scores180.textContent = state.currentGameStats.playerScores[1].scores180;
+                ui.statValueSpans.p2_sillyThings.textContent = state.currentGameStats.playerScores[1].sillyThings;
+            } else {
+                ui.statValueSpans.scores100.textContent = state.currentGameStats.playerScores[0].scores100;
+                ui.statValueSpans.scores140.textContent = state.currentGameStats.playerScores[0].scores140;
+                ui.statValueSpans.scores180.textContent = state.currentGameStats.playerScores[0].scores180;
+                ui.statValueSpans.sillyThings.textContent = state.currentGameStats.playerScores[0].sillyThings;
+            }
+
+            ui.prevGameBtn.disabled = state.currentGameIndex === 0;
+            ui.nextGameBtn.disabled = state.currentGameIndex === state.fixture.games.length - 1;
+
+            const isFinalGame = state.currentGameIndex === state.fixture.games.length - 1;
+            const saveNextBtn = document.getElementById('save-next-game-btn');
+            const finishMatchBtn = document.getElementById('finish-match-btn');
+            saveNextBtn.classList.toggle('hidden', isFinalGame);
+            finishMatchBtn.classList.toggle('hidden', !isFinalGame);
+        }
+
+        // --- UI Feedback ---
+        function showToast(message, isError = false) {
+            ui.toast.message.textContent = message;
+            ui.toast.element.classList.remove('bg-emerald-500', 'bg-red-500', 'translate-x-[150%]');
+            ui.toast.element.classList.add(isError ? 'bg-red-500' : 'bg-emerald-500');
+            ui.toast.element.classList.remove('translate-x-[150%]');
+            setTimeout(() => {
+                ui.toast.element.classList.add('translate-x-[150%]');
+            }, 3000);
+        }
+
+        // --- MODAL LOGIC ---
+        function openConfirmModal(title, text, action, data) {
+            state.confirmation = { action, data };
+            ui.confirmModal.title.textContent = title;
+            ui.confirmModal.text.textContent = text;
+            ui.confirmModal.overlay.classList.remove('hidden');
+            ui.confirmModal.overlay.classList.add('flex');
+        }
+
+        function closeConfirmModal() {
+            state.confirmation = { action: null, data: null };
+            ui.confirmModal.overlay.classList.add('hidden');
+            ui.confirmModal.overlay.classList.remove('flex');
+        }
+
+        async function handleConfirmation() {
+            if (state.confirmation.action === 'deletePlayer') {
+                try {
+                    await deleteDoc(doc(state.db, 'players', state.confirmation.data));
+                    showToast("Player removed.");
+                } catch (error) {
+                    console.error("Error deleting player: ", error);
+                    showToast("Could not remove player.", true);
+                }
+            }
+            closeConfirmModal();
+        }
+
+        // --- EVENT HANDLERS & LOGIC ---
+        function switchTab(tabName) {
+            state.activeTab = tabName;
+            render();
+        }
+        async function addPlayer() {
+            const name = ui.newPlayerInput.value.trim();
+            if (!name) {
+                showToast("Player name cannot be empty.", true);
+                return;
+            }
+            try {
+                // Add new player to the 'players' collection
+                await addDoc(collection(state.db, 'players'), { 
+                    name: name, 
+                    fines: 0,
+                    // Initialize stats to prevent errors on leaderboard
+                    legsWon: 0,
+                    legsLost: 0,
+                    scores100: 0,
+                    scores140: 0,
+                    scores180: 0,
+                    highCheckout: 0
+                });
+                showToast(`${name} added to the roster.`);
+                ui.newPlayerInput.value = '';
+            } catch (error) {
+                console.error("Error adding player: ", error);
+                if (error.code === 'permission-denied') {
+                     showToast("Could not add player. Check Firestore rules.", true);
+                } else {
+                     showToast("Could not add player.", true);
+                }
+            }
+        }
+        function deletePlayer(playerId) {
+            const player = state.players.find(p => p.id === playerId);
+            openConfirmModal(
+                `Remove ${player?.name || 'Player'}?`,
+                'This will permanently remove the player from the roster. This action cannot be undone.',
+                'deletePlayer',
+                playerId
+            );
+        }
+        async function createFixture() {
+            const oppositionName = ui.oppositionNameInput.value.trim();
+            if(!oppositionName) {
+                showToast("Please enter an opposition name.", true);
+                return;
+            }
+
+            const games = [];
+            // Corrected game format: 5 singles, 2 doubles
+            const gameTitles = ["Singles 1", "Singles 2", "Singles 3", "Singles 4", "Singles 5", "Doubles 1", "Doubles 2"];
+            for (let i = 0; i < gameTitles.length; i++) {
+                const title = gameTitles[i];
+                const isDoubles = title.includes("Doubles");
+                const p1 = document.getElementById(`game-${i}-p1`).value;
+                const playerIds = [p1];
+                if (isDoubles) {
+                    const p2 = document.getElementById(`game-${i}-p2`).value;
+                    if (p2) playerIds.push(p2);
+                }
+                if (playerIds.some(id => !id)) {
+                    showToast(`Please select players for ${title}.`, true);
+                    return;
+                }
+                games.push({
+                    title: title,
+                    playerIds: playerIds,
+                    legsWon: 0,
+                    legsLost: 0,
+                    scores100: 0,
+                    scores140: 0,
+                    scores180: 0,
+                    sillyThings: 0,
+                    highCheckout: 0,
+                    fines: 0,
+                });
+            }
+
+            try {
+                await addDoc(collection(state.db, 'fixtures'), {
+                    oppositionName: oppositionName,
+                    games: games,
+                    status: 'live',
+                    createdAt: serverTimestamp()
+                });
+                showToast("Fixture created! Let's play darts!");
+                state.activeTab = 'live';
+                render();
+            } catch (error) {
+                console.error("Error creating fixture: ", error);
+                showToast("Could not create the fixture.", true);
+            }
+        }
+        function resetCurrentGameStats() {
+            state.currentGameStats = {
+                legsWon: 0,
+                legsLost: 0,
+                highCheckout: 0,
+                fines: 0,
+                playerScores: [{ scores100: 0, scores140: 0, scores180: 0, sillyThings: 0 }, { scores100: 0, scores140: 0, scores180: 0, sillyThings: 0 }]
+            };
+        }
+        
+        function updateStat(stat, value, playerIndex = 0) {
+            const game = state.fixture.games[state.currentGameIndex];
+            if (!game) return;
+            const isDoubles = game.playerIds.length > 1;
+
+            if(stat.startsWith('scores') || stat === 'sillyThings') {
+                if (isDoubles) {
+                    state.currentGameStats.playerScores[playerIndex][stat] = Math.max(0, state.currentGameStats.playerScores[playerIndex][stat] + value);
+                } else {
+                    state.currentGameStats.playerScores[0][stat] = Math.max(0, state.currentGameStats.playerScores[0][stat] + value);
+                }
+            } else {
+                 state.currentGameStats[stat] = Math.max(0, state.currentGameStats[stat] + value);
+            }
+            render(); // Re-render all components to show live updates
+        }
+        function addFine(amount, reason) {
+            state.currentGameStats.fines += amount;
+            showToast(`Fine added: ${reason} (+£${(amount/100).toFixed(2)})`);
+            renderLiveMatch();
+        }
+
+        async function saveGameAndProceed(isFinalGame = false) {
+            if (isFinalGame) {
+                // Save the final game's stats, then open the DOTD modal
+                await saveCurrentGameStats();
+                openDotdModal();
+            } else {
+                // Save stats and move to the next game
+                await saveCurrentGameStats();
+                showToast(`Game ${state.currentGameIndex + 1} saved.`, false);
+                state.currentGameIndex++;
+                resetCurrentGameStats();
+                render();
+            }
+        }
+
+        async function saveCurrentGameStats() {
+            const fixtureRef = doc(state.db, "fixtures", state.fixture.id);
+            const game = state.fixture.games[state.currentGameIndex];
+            const statsToSave = {
+                legsWon: state.currentGameStats.legsWon,
+                legsLost: state.currentGameStats.legsLost,
+                highCheckout: state.currentGameStats.highCheckout,
+                fines: state.currentGameStats.fines,
+                scores100: state.currentGameStats.playerScores.reduce((a,b) => a + b.scores100, 0),
+                scores140: state.currentGameStats.playerScores.reduce((a,b) => a + b.scores140, 0),
+                scores180: state.currentGameStats.playerScores.reduce((a,b) => a + b.scores180, 0),
+                sillyThings: state.currentGameStats.playerScores.reduce((a,b) => a + b.sillyThings, 0),
+            };
+
+            try {
+                await runTransaction(state.db, async (transaction) => {
+                    const fixtureDoc = await transaction.get(fixtureRef);
+                    if (!fixtureDoc.exists()) throw "Fixture does not exist!";
+                    const playerRefs = game.playerIds.map(id => doc(state.db, "players", id));
+                    const playerDocs = await Promise.all(playerRefs.map(ref => transaction.get(ref)));
+
+                    const updatedGames = [...fixtureDoc.data().games];
+                    updatedGames[state.currentGameIndex] = { ...game, ...statsToSave };
+                    transaction.update(fixtureRef, { games: updatedGames });
+
+                    playerDocs.forEach((playerDoc, i) => {
+                        const playerRef = playerRefs[i];
+                        const playerUpdate = {
+                            legsWon: increment(state.currentGameStats.legsWon),
+                            legsLost: increment(state.currentGameStats.legsLost),
+                            scores100: increment(state.currentGameStats.playerScores[i].scores100),
+                            scores140: increment(state.currentGameStats.playerScores[i].scores140),
+                            scores180: increment(state.currentGameStats.playerScores[i].scores180),
+                            fines: increment(state.currentGameStats.fines),
+                        };
+                        if (state.currentGameStats.highCheckout > (playerDoc.data()?.highCheckout || 0)) {
+                            playerUpdate.highCheckout = state.currentGameStats.highCheckout;
+                        }
+                        transaction.update(playerRef, playerUpdate);
+                    });
+                });
+                const updatedLocalGames = [...state.fixture.games];
+                updatedLocalGames[state.currentGameIndex] = { ...game, ...statsToSave };
+                state.fixture.games = updatedLocalGames;
+                render();
+            } catch (e) {
+                console.error("Transaction failed: ", e);
+                showToast("Failed to save game stats. Please try again.", true);
+            }
+        }
+
+        async function finishMatch(dotdPlayerId) {
+            if (dotdPlayerId) {
+                const playerRef = doc(state.db, "players", dotdPlayerId);
+                await updateDoc(playerRef, { fines: increment(250) }); // Corrected to £2.50
+                const playerName = state.players.find(p => p.id === dotdPlayerId)?.name || 'Player';
+                showToast(`${playerName} is DOTD! (+£2.50 fine)`, false);
+            }
+
+            const fixtureRef = doc(state.db, "fixtures", state.fixture.id);
+            await updateDoc(fixtureRef, { status: 'finished' });
+            showToast("Match finished and all stats saved! Well played.", false);
+            
+            ui.dotdModal.overlay.classList.add('hidden');
+            ui.dotdModal.overlay.classList.remove('flex');
+            
+            state.activeTab = 'match';
+            resetCurrentGameStats();
+            render();
+        }
+
+
+        async function markFinesAsPaid(playerId) {
+            const playerRef = doc(state.db, "players", playerId);
+            try {
+                await updateDoc(playerRef, { fines: 0 });
+                showToast("Fines cleared for player.", false);
+            } catch (error) {
+                console.error("Error clearing fines: ", error);
+                showToast("Could not clear fines.", true);
+            }
+        }
+
+        function openLowScoreModal() {
+            ui.lowScoreModal.overlay.classList.remove('hidden');
+            ui.lowScoreModal.overlay.classList.add('flex');
+        }
+        function closeLowScoreModal() {
+            ui.lowScoreModal.overlay.classList.add('hidden');
+            ui.lowScoreModal.overlay.classList.remove('flex');
+            ui.lowScoreModal.input.value = '';
+        }
+        function submitLowScoreFine() {
+            const score = parseInt(ui.lowScoreModal.input.value);
+            if (score >= 1 && score <= 9) {
+                addFine((10 - score) * 10, `Score of ${score}`); // Corrected fine calculation
+                closeLowScoreModal();
+            } else {
+                showToast("Please enter a score between 1 and 9.", true);
+            }
+        }
+
+        function openDotdModal() {
+            const allPlayerIdsInFixture = [...new Set(state.fixture.games.flatMap(game => game.playerIds))];
+            const playersInFixture = allPlayerIdsInFixture.map(id => state.players.find(p => p.id === id)).filter(Boolean);
+
+            ui.dotdModal.list.innerHTML = '';
+            playersInFixture.forEach(player => {
+                const playerEl = document.createElement('div');
+                playerEl.className = 'flex items-center';
+                playerEl.innerHTML = `
+                    <input id="dotd-${player.id}" name="dotd-vote" type="radio" value="${player.id}" class="h-4 w-4 text-emerald-600 border-gray-300 focus:ring-emerald-500">
+                    <label for="dotd-${player.id}" class="ml-3 block text-sm font-medium text-gray-700">${player.name}</label>
+                `;
+                ui.dotdModal.list.appendChild(playerEl);
+            });
+
+            ui.dotdModal.overlay.classList.remove('hidden');
+            ui.dotdModal.overlay.classList.add('flex');
+        }
+        
+        // --- INITIALIZATION ---
+        async function init() {
+            // --- Firebase Setup ---
+            const firebaseConfig = {
+                apiKey: "AIzaSyCU66DqSCzkwaEhTLEOftEJtKbt9y4xVeI",
+                authDomain: "darts-app-9e752.firebaseapp.com",
+                databaseURL: "https://darts-app-9e752-default-rtdb.europe-west1.firebasedatabase.app",
+                projectId: "darts-app-9e752",
+                storageBucket: "darts-app-9e752.appspot.com",
+                messagingSenderId: "520662271304",
+                appId: "1:520662271304:web:abb1ca68445511c8bb1f7d"
+            };
+
+            const app = initializeApp(firebaseConfig);
+            state.db = getFirestore(app);
+            state.auth = getAuth(app);
+            setLogLevel('debug'); 
+
+            ui.connectionStatus.classList.remove('hidden');
+
+            // --- Authentication ---
+            try {
+                const userCredential = await signInAnonymously(state.auth);
+                state.userId = userCredential.user.uid;
+                console.log("Authentication successful. UID:", state.userId);
+            } catch (error) {
+                console.error("Firebase Authentication Failed:", error);
+                ui.connectionStatus.textContent = "Authentication failed. App may not work.";
+                ui.connectionStatus.classList.replace('bg-yellow-100', 'bg-red-100');
+                ui.connectionStatus.classList.replace('text-yellow-800', 'text-red-800');
+                return; 
+            }
+
+            // --- Firestore Listeners ---
+            const handleError = (error, type) => {
+                 console.error(`Error fetching ${type}: `, error);
+                 ui.connectionStatus.innerHTML = `<strong>Database Error:</strong> Could not load ${type}. Please check Firestore security rules in the Firebase Console.`;
+                 ui.connectionStatus.classList.replace('bg-yellow-100', 'bg-red-100');
+                 ui.connectionStatus.classList.replace('text-yellow-800', 'text-red-800');
+                 ui.connectionStatus.classList.remove('hidden');
+            };
+
+            onSnapshot(query(collection(state.db, 'players')), (snapshot) => {
+                ui.connectionStatus.classList.add('hidden'); // Hide on first successful data fetch
+                state.players = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                state.players.sort((a, b) => a.name.localeCompare(b.name));
+                render();
+            }, (error) => handleError(error, 'players'));
+            
+            onSnapshot(query(collection(state.db, 'fixtures')), (snapshot) => {
+                ui.connectionStatus.classList.add('hidden'); // Hide on first successful data fetch
+                const allFixtures = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                allFixtures.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
+
+                const activeFixture = allFixtures.find(f => f.status === 'live');
+                
+                if (activeFixture) {
+                    const oldFixtureId = state.fixture.id;
+                    state.fixture = activeFixture;
+                    if (oldFixtureId !== activeFixture.id) {
+                        state.currentGameIndex = 0;
+                        resetCurrentGameStats();
+                    }
+                } else {
+                    state.fixture = { id: null, games: [] };
+                }
+
+                state.previousFixtures = allFixtures.filter(f => f.status === 'finished');
+                render();
+            }, (error) => handleError(error, 'fixtures'));
+
+            // --- Event Listeners ---
+            Object.keys(ui.tabs).forEach(tabName => {
+                ui.tabs[tabName].addEventListener('click', () => switchTab(tabName));
+            });
+            ui.addPlayerBtn.addEventListener('click', addPlayer);
+            ui.newPlayerInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') addPlayer(); });
+            ui.createFixtureBtn.addEventListener('click', createFixture);
+            ui.prevGameBtn.addEventListener('click', () => { if (state.currentGameIndex > 0) { state.currentGameIndex--; resetCurrentGameStats(); render(); } });
+            ui.nextGameBtn.addEventListener('click', () => { if (state.currentGameIndex < state.fixture.games.length - 1) { state.currentGameIndex++; resetCurrentGameStats(); render(); } });
+            
+            ui.liveMatchContent.addEventListener('click', (e) => {
+                const statBtn = e.target.closest('.stat-btn');
+                if (statBtn) {
+                     const playerIndex = statBtn.hasAttribute('data-player-index') ? parseInt(statBtn.dataset.playerIndex) : 0;
+                     updateStat(statBtn.dataset.stat, parseInt(statBtn.dataset.op), playerIndex);
+                }
+            });
+
+            ui.playerRoster.addEventListener('click', (e) => {
+                const deleteBtn = e.target.closest('.delete-player-btn');
+                if (deleteBtn) {
+                    deletePlayer(deleteBtn.dataset.playerId);
+                }
+            });
+
+            ui.previousMatchesList.addEventListener('click', (e) => {
+                const matchBtn = e.target.closest('button[data-fixture-id]');
+                if (matchBtn) {
+                    state.selectedPreviousFixtureId = matchBtn.dataset.fixtureId;
+                    render();
+                }
+            });
+
+            ui.finesList.addEventListener('click', (e) => {
+                const payBtn = e.target.closest('.pay-fines-btn');
+                if (payBtn) {
+                    markFinesAsPaid(payBtn.dataset.playerId);
+                }
+            });
+
+            ui.highCheckoutInput.addEventListener('input', (e) => { state.currentGameStats.highCheckout = parseInt(e.target.value) || 0; });
+            ui.fineBtn26.addEventListener('click', () => addFine(26, 'Score of 26'));
+            ui.fineBtnMiss.addEventListener('click', () => addFine(50, 'Missed Board'));
+            ui.fineBtnLowScore.addEventListener('click', openLowScoreModal);
+            ui.lowScoreModal.cancel.addEventListener('click', closeLowScoreModal);
+            ui.lowScoreModal.submit.addEventListener('click', submitLowScoreFine);
+            
+            ui.gameActionButtons.addEventListener('click', (e) => {
+                if (e.target.id === 'save-next-game-btn') saveGameAndProceed(false);
+                if (e.target.id === 'finish-match-btn') saveGameAndProceed(true);
+            });
+
+            ui.dotdModal.finish.addEventListener('click', () => {
+                const selectedPlayer = document.querySelector('input[name="dotd-vote"]:checked');
+                if (!selectedPlayer) {
+                    showToast("Please select a player for DOTD.", true);
+                    return;
+                }
+                finishMatch(selectedPlayer.value);
+            });
+
+            ui.confirmModal.cancel.addEventListener('click', closeConfirmModal);
+            ui.confirmModal.confirm.addEventListener('click', handleConfirmation);
+            
+            render();
+        }
+
+        // --- Start the App ---
+        init();
+    </script>
+</body>
+</html>
