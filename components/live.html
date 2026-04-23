@@ -1,0 +1,114 @@
+<div id="tab-content-live">
+    <div id="live-match-content">
+        <div class="flex justify-between items-center mb-4">
+            <button id="prev-game-btn" class="bg-gray-800 dark:bg-gray-600 text-white py-2 px-4 sm:px-5 rounded-xl hover:bg-gray-700 dark:hover:bg-gray-500 disabled:opacity-50 transition-colors duration-200 text-sm sm:text-base">Prev</button>
+            <h2 id="game-nav-title" class="text-xl sm:text-2xl font-bold text-center mx-2 dark:text-white"></h2>
+            <button id="next-game-btn" class="bg-gray-800 dark:bg-gray-600 text-white py-2 px-4 sm:px-5 rounded-xl hover:bg-gray-700 dark:hover:bg-gray-500 disabled:opacity-50 transition-colors duration-200 text-sm sm:text-base">Next</button>
+        </div>
+
+        <div id="live-scoring-score-container" class="mb-4"></div>
+
+        <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+            <h3 id="current-player-names" class="text-2xl sm:text-3xl font-bold text-center text-emerald-600 dark:text-emerald-400 mb-6"></h3>
+
+            <div class="grid grid-cols-2 gap-4 mb-6 text-center">
+                <div class="bg-gray-100 dark:bg-gray-700 p-3 sm:p-4 rounded-2xl">
+                    <label class="text-sm font-medium text-gray-600 dark:text-gray-300">Legs Won</label>
+                    <div class="flex items-center justify-center space-x-3 mt-2">
+                        <button data-stat="legsWon" data-op="-1" class="stat-btn w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 text-xl font-bold">-</button>
+                        <span id="stat-legsWon" class="text-3xl font-bold dark:text-white">0</span>
+                        <button data-stat="legsWon" data-op="1" class="stat-btn w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 text-xl font-bold">+</button>
+                    </div>
+                </div>
+                <div class="bg-gray-100 dark:bg-gray-700 p-3 sm:p-4 rounded-2xl">
+                    <label class="text-sm font-medium text-gray-600 dark:text-gray-300">Legs Lost</label>
+                    <div class="flex items-center justify-center space-x-3 mt-2">
+                        <button data-stat="legsLost" data-op="-1" class="stat-btn w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 text-xl font-bold">-</button>
+                        <span id="stat-legsLost" class="text-3xl font-bold dark:text-white">0</span>
+                        <button data-stat="legsLost" data-op="1" class="stat-btn w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 text-xl font-bold">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="singles-scoring-panel" class="flex flex-wrap justify-center gap-2 sm:gap-4 mb-6">
+                <div class="bg-gray-100 dark:bg-gray-700 p-2 sm:p-4 rounded-2xl flex-1 text-center min-w-[140px]">
+                    <label class="text-sm font-medium text-gray-600 dark:text-gray-300">100+</label>
+                    <div class="flex items-center justify-center space-x-3 mt-2">
+                        <button data-stat="scores100" data-op="-1" class="stat-btn w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 text-xl font-bold">-</button>
+                        <span id="stat-scores100" class="text-3xl font-bold dark:text-white">0</span>
+                        <button data-stat="scores100" data-op="1" class="stat-btn w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 text-xl font-bold">+</button>
+                    </div>
+                </div>
+                <div class="bg-gray-100 dark:bg-gray-700 p-2 sm:p-4 rounded-2xl flex-1 text-center min-w-[140px]">
+                    <label class="text-sm font-medium text-gray-600 dark:text-gray-300">140+</label>
+                    <div class="flex items-center justify-center space-x-3 mt-2">
+                        <button data-stat="scores140" data-op="-1" class="stat-btn w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 text-xl font-bold">-</button>
+                        <span id="stat-scores140" class="text-3xl font-bold dark:text-white">0</span>
+                        <button data-stat="scores140" data-op="1" class="stat-btn w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 text-xl font-bold">+</button>
+                    </div>
+                </div>
+                <div class="bg-gray-100 dark:bg-gray-700 p-2 sm:p-4 rounded-2xl flex-1 text-center min-w-[140px]">
+                    <label class="text-sm font-medium text-gray-600 dark:text-gray-300">180s</label>
+                    <div class="flex items-center justify-center space-x-3 mt-2">
+                        <button data-stat="scores180" data-op="-1" class="stat-btn w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 text-xl font-bold">-</button>
+                        <span id="stat-scores180" class="text-3xl font-bold dark:text-white">0</span>
+                        <button data-stat="scores180" data-op="1" class="stat-btn w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 text-xl font-bold">+</button>
+                    </div>
+                </div>
+                <div class="bg-gray-100 dark:bg-gray-700 p-2 sm:p-4 rounded-2xl flex-1 text-center min-w-[140px]">
+                    <label class="text-sm font-medium text-gray-600 dark:text-gray-300">?</label>
+                    <div class="flex items-center justify-center space-x-3 mt-2">
+                        <button data-stat="sillyThings" data-op="-1" class="stat-btn w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 text-xl font-bold">-</button>
+                        <span id="stat-sillyThings" class="text-3xl font-bold dark:text-white">0</span>
+                        <button data-stat="sillyThings" data-op="1" class="stat-btn w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 text-xl font-bold">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="doubles-scoring-panel" class="hidden mb-6">
+                <div class="grid grid-cols-1 gap-4">
+                    <div class="border border-gray-200 dark:border-gray-700 p-3 sm:p-4 rounded-2xl">
+                        <h4 id="doubles-p1-name" class="text-lg font-semibold text-center mb-3 dark:text-white"></h4>
+                        <div class="flex flex-wrap justify-center gap-2">
+                            <div class="bg-gray-100 dark:bg-gray-600 p-2 rounded-xl flex-1 text-center min-w-[120px]">
+                                <label class="text-xs font-medium text-gray-600 dark:text-gray-300">100+</label>
+                                <div class="flex items-center justify-center space-x-2 mt-1">
+                                    <button data-stat="scores100" data-op="-1" data-player-index="0" class="stat-btn w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-500 text-gray-700 dark:text-gray-200 font-bold">-</button>
+                                    <span id="stat-p1-scores100" class="text-2xl font-bold dark:text-white">0</span>
+                                    <button data-stat="scores100" data-op="1" data-player-index="0" class="stat-btn w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-500 text-gray-700 dark:text-gray-200 font-bold">+</button>
+                                </div>
+                            </div>
+                            </div>
+                    </div>
+                    <div class="border border-gray-200 dark:border-gray-700 p-3 sm:p-4 rounded-2xl">
+                        <h4 id="doubles-p2-name" class="text-lg font-semibold text-center mb-3 dark:text-white"></h4>
+                        <div class="flex flex-wrap justify-center gap-2">
+                            </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-6 max-w-xs mx-auto">
+                <label for="high-checkout-input" class="block text-sm font-medium text-gray-700 dark:text-gray-300 text-center">High Checkout (H/C)</label>
+                <input type="number" id="high-checkout-input" class="mt-1 block w-full text-center text-xl p-2 border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+            </div>
+
+            <div id="fines-panel" class="mb-8 border-t dark:border-gray-700 pt-6">
+                <h4 class="text-lg font-semibold text-center mb-3 dark:text-white">Game Incidents</h4>
+                <div class="flex justify-center flex-wrap gap-2">
+                    <button id="fine-btn-26" class="bg-red-500 text-white py-2 px-3 rounded-xl hover:bg-red-600 transition-colors duration-200 text-sm">26 (26p)</button>
+                    <button id="fine-btn-miss" class="bg-red-500 text-white py-2 px-3 rounded-xl hover:bg-red-600 transition-colors duration-200 text-sm">Miss Board (50p)</button>
+                    <button id="fine-btn-low-score" class="bg-red-500 text-white py-2 px-3 rounded-xl hover:bg-red-600 transition-colors duration-200 text-sm">Score < 10</button>
+                </div>
+                <p class="text-center text-gray-600 dark:text-gray-400 mt-4">Current Fines: <span id="stat-fines" class="font-bold">£0.00</span></p>
+            </div>
+
+            <div id="game-action-buttons" class="mt-6 border-t border-gray-200 dark:border-gray-700 pt-6">
+                <button id="finish-match-btn" class="w-full bg-emerald-600 text-white py-3 px-4 rounded-xl hover:bg-emerald-700 transition-colors duration-200 font-semibold text-lg hidden">Finish Game & Save Stats</button>
+            </div>
+        </div>
+    </div>
+    <div id="no-fixture-message" class="hidden text-center text-gray-500 dark:text-gray-400 p-10">
+        <p>No active fixture. Please go to Match Setup to start a new one.</p>
+    </div>
+</div>
