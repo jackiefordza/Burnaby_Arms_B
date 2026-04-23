@@ -1,0 +1,35 @@
+/* styles/style.css */
+
+/* Set the default font for the entire app */
+body { 
+    font-family: 'Inter', sans-serif; 
+}
+
+/* Handle the smooth slide-in effect for toast notifications */
+#toast-notification {
+    transition: transform 0.5s ease-in-out;
+}
+
+/* Handle the fade-in effect for pop-up windows */
+.modal-overlay {
+    transition: opacity 0.3s ease;
+}
+
+/* Custom scrollbar for the leaderboard and match history lists */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+    border-radius: 10px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+    background: #4a5568;
+}
