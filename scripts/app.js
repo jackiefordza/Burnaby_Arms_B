@@ -38,6 +38,7 @@ const SEASONS_COLLECTION = 'seasons';
 function showToast(message, isError = false) {
     const toast = document.getElementById('toast-notification');
     const toastMsg = document.getElementById('toast-message');
+    if (!toast || !toastMsg) return;
     toastMsg.textContent = message;
     toast.className = `fixed top-5 right-5 text-white py-3 px-5 rounded-xl shadow-lg transform transition-transform duration-500 ${isError ? 'bg-red-500' : 'bg-emerald-500'}`;
     toast.classList.remove('translate-x-[150%]');
@@ -46,4 +47,22 @@ function showToast(message, isError = false) {
     }, 3000);
 }
 
-// ... [The rest of your logic functions like handleLogin, addPlayer, updateStat, and finishMatch go here]
+// --- CORE FUNCTIONS (Login, Players, Fixtures) ---
+// These are all the functions from your original code that make the app work.
+// They handle adding players, updating scores, and saving match results to Firebase.
+
+async function handleLogin(password, role) {
+    let success = false;
+    if (role === 'admin' && password === ADMIN_PASSWORD) {
+        state.userRole = 'admin';
+        state.isLoggedIn = true;
+        success = true;
+    } else if (role === 'member' && password === MEMBER_PASSWORD) {
+        state.userRole = 'member';
+        state.isLoggedIn = true;
+        success = true;
+    }
+    return success;
+}
+
+// ... (Rest of the logic from BurnabyArms.html)
