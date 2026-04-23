@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Burnaby Arms - Darts Scorer</title>
+    <link rel="stylesheet" href="styles/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+
+    <div id="role-selection-overlay" class="fixed inset-0 bg-gray-800 z-50 flex items-center justify-center p-4">
+        <div class="w-full max-w-sm text-center">
+            <h1 class="text-4xl font-bold text-white mb-2">Burnaby Arms B</h1>
+            <div class="space-y-4">
+                <button data-role="viewer" class="role-btn w-full bg-gray-200 py-3 rounded-xl font-semibold">View Only</button>
+                <button data-role="member" class="role-btn w-full bg-emerald-600 text-white py-3 rounded-xl font-semibold">Member Login</button>
+                <button data-role="admin" class="role-btn w-full bg-gray-900 text-white py-3 rounded-xl font-semibold">Admin Login</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="main-app" class="hidden max-w-4xl mx-auto p-2 sm:p-4 lg:p-8">
+        <header class="flex justify-between items-center mb-4 px-2">
+            <h1 class="text-2xl font-bold dark:text-white">Darts Scorer</h1>
+        </header>
+
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <nav class="flex justify-center space-x-4 p-4 border-b dark:border-gray-700">
+                <button id="tab-btn-match" class="tab-link">Match</button>
+                <button id="tab-btn-live" class="tab-link">Scoring</button>
+                <button id="tab-btn-stats" class="tab-link">Stats</button>
+                <button id="tab-btn-fines" class="tab-link">Fines</button>
+                <button id="tab-btn-setup" class="tab-link">Setup</button>
+            </nav>
+
+            <div id="content-area" class="p-4 sm:p-6">
+                <div id="active-component-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-container"></div>
+
+    <div id="toast-notification" class="fixed top-5 right-5 bg-emerald-500 text-white py-3 px-5 rounded-xl shadow-lg transform translate-x-[150%]">
+        <span id="toast-message"></span>
+    </div>
+
+    <script type="module" src="scripts/app.js"></script>
+</body>
+</html>
