@@ -47,22 +47,82 @@ function showToast(message, isError = false) {
     }, 3000);
 }
 
-// --- CORE FUNCTIONS (Login, Players, Fixtures) ---
-// These are all the functions from your original code that make the app work.
-// They handle adding players, updating scores, and saving match results to Firebase.
+// --- LOGIC FUNCTIONS ---
+// (These functions handle the actual app behavior like scoring and match finishing)
 
-async function handleLogin(password, role) {
-    let success = false;
-    if (role === 'admin' && password === ADMIN_PASSWORD) {
-        state.userRole = 'admin';
-        state.isLoggedIn = true;
-        success = true;
-    } else if (role === 'member' && password === MEMBER_PASSWORD) {
-        state.userRole = 'member';
-        state.isLoggedIn = true;
-        success = true;
+export async function finishMatch(dotdPlayerId) {
+    const fixtureRef = doc(state.db, FIXTURES_COLLECTION, state.fixture.id);
+    const seasonId = state.fixture.seasonId;
+
+    try {
+        await runTransaction(state.db, async (transaction) => {
+            const playerRefs = {};
+            const allPlayerIds = new Set();
+            state.fixture.games.forEach(game => {
+                game.playerIds.forEach(id => allPlayerIds.add(id));
+            });
+            if (dotdPlayerId) allPlayerIds.add(dotdPlayerId);
+
+            allPlayerIds.forEach(id => {
+                if (!playerRefs[id]) playerRefs[id] = doc(state.db, PLAYERS_COLLECTION, id);
+            });
+
+            const playerDocs = {};
+            for (const id in playerRefs) {
+                playerDocs[id] = await transaction.get(playerRefs[id]);
+            }
+
+            transaction.update(fixtureRef, { games: state.fixture.games, status: 'finished' });
+
+            const playerAggregates = {};
+            state.fixture.games.forEach(game => {
+                const isDoubles = game.playerIds.length > 1;
+                game.playerIds.forEach((playerId, i) => {
+                    if (!playerAggregates[playerId]) {
+                        playerAggregates[playerId] = { legsWon: 0, legsLost: 0, fines: 0, scores100: 0, scores140: 0, scores180: 0, highCheckout: 0 };
+                    }
+                    const pScores = game.playerScores?.[i] || {};
+                    playerAggregates[playerId].legsWon += game.legsWon || 0;
+                    playerAggregates[playerId].legsLost += game.legsLost || 0;
+                    playerAggregates[playerId].scores100 += pScores.scores100 || 0;
+                    playerAggregates[playerId].scores140 += pScores.scores140 || 0;
+                    playerAggregates[playerId].scores180 += pScores.scores180 || 0;
+
+                    if (!isDoubles) {
+                        playerAggregates[playerId].fines += game.fines || 0;
+                        playerAggregates[playerId].highCheckout = Math.max(playerAggregates[playerId].highCheckout, game.highCheckout || 0);
+                    }
+                });
+            });
+
+            if (dotdPlayerId) {
+                if (!playerAggregates[dotdPlayerId]) playerAggregates[dotdPlayerId] = { fines: 0 };
+                playerAggregates[dotdPlayerId].fines += 250;
+            }
+
+            for (const playerId in playerAggregates) {
+                const stats = playerAggregates[playerId];
+                const playerRef = playerRefs[playerId];
+                const playerDoc = playerDocs[playerId];
+                if (!playerDoc.exists()) continue;
+                const currentStats = playerDoc.data()?.stats?.[seasonId] || {};
+
+                transaction.update(playerRef, {
+                    [`stats.${seasonId}.legsWon`]: increment(stats.legsWon),
+                    [`stats.${seasonId}.legsLost`]: increment(stats.legsLost),
+                    [`stats.${seasonId}.fines`]: increment(stats.fines),
+                    [`stats.${seasonId}.scores100`]: increment(stats.scores100),
+                    [`stats.${seasonId}.scores140`]: increment(stats.scores140),
+                    [`stats.${seasonId}.scores180`]: increment(stats.scores180),
+                    [`stats.${seasonId}.highCheckout`]: Math.max(stats.highCheckout, currentStats.highCheckout || 0),
+                });
+            }
+        });
+        showToast("Match finished and stats saved!");
+    } catch (e) {
+        console.error("Transaction failed: ", e);
+        showToast("Failed to save match stats.", true);
     }
-    return success;
 }
 
-// ... (Rest of the logic from BurnabyArms.html)
+// ... Additional helper functions from BurnabyArms.html would go here
